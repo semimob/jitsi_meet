@@ -1,6 +1,6 @@
 name: jitsi_meet_web_plugin
 description: Jitsi Meet Web Plugin
-version: 2.0.0
+version: 2.0.1
 homepage: https://github.com/semimob/jitsi_meet
 
 environment:
