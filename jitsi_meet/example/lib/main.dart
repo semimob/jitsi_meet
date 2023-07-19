@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:jitsi_meet/jitsi_meet.dart';
@@ -21,31 +20,15 @@ class Meeting extends StatefulWidget {
 
 class _MeetingState extends State<Meeting> {
   final serverText = TextEditingController();
-  final roomText = TextEditingController(text: "plugintestroom");
-  final subjectText = TextEditingController(text: "My Plugin Test Meeting");
-  final nameText = TextEditingController(text: "Plugin Test User");
-  final emailText = TextEditingController(text: "fake@email.com");
+  final roomText = TextEditingController(text: "omni_room_sample_1234");
+  final subjectText = TextEditingController(text: "Subject1");
+  final nameText = TextEditingController(text: "User1");
+  final emailText = TextEditingController(text: "fake1@email.com");
   final iosAppBarRGBAColor =
-      TextEditingController(text: "#0080FF80"); //transparent blue
+  TextEditingController(text: "#0080FF80"); //transparent blue
   bool? isAudioOnly = true;
   bool? isAudioMuted = true;
   bool? isVideoMuted = true;
-
-  @override
-  void initState() {
-    super.initState();
-    JitsiMeet.addListener(JitsiMeetingListener(
-        onConferenceWillJoin: _onConferenceWillJoin,
-        onConferenceJoined: _onConferenceJoined,
-        onConferenceTerminated: _onConferenceTerminated,
-        onError: _onError));
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    JitsiMeet.removeAllListeners();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,32 +44,31 @@ class _MeetingState extends State<Meeting> {
           ),
           child: kIsWeb
               ? Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: width * 0.30,
-                      child: meetConfig(),
-                    ),
-                    Container(
-                        width: width * 0.60,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Card(
-                              color: Colors.white54,
-                              child: SizedBox(
-                                width: width * 0.60 * 0.70,
-                                height: width * 0.60 * 0.70,
-                                child: JitsiMeetConferencing(
-                                  extraJS: [
-                                    // extraJs setup example
-                                    '<script>function echo(){console.log("echo!!!")};</script>',
-                                    '<script src="https://code.jquery.com/jquery-3.5.1.slim.js" integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM=" crossorigin="anonymous"></script>'
-                                  ],
-                                ),
-                              )),
-                        ))
-                  ],
-                )
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: width * 0.30,
+                child: meetConfig(),
+              ),
+              Container(
+                  width: width * 0.60,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Card(
+                        color: Colors.white54,
+                        child: SizedBox(
+                          width: width * 0.60 * 0.70,
+                          height: width * 0.60 * 0.70,
+                          child: JitsiMeetConferencing(
+                            extraJS: [
+                              // extraJs setup example
+                              '<script src="https://code.jquery.com/jquery-3.6.3.slim.js" integrity="sha256-DKU1CmJ8kBuEwumaLuh9Tl/6ZB6jzGOBV/5YpNE2BWc=" crossorigin="anonymous"></script>'
+                            ],
+                          ),
+                        )),
+                  ))
+            ],
+          )
               : meetConfig(),
         ),
       ),
@@ -198,7 +180,7 @@ class _MeetingState extends State<Meeting> {
               ),
               style: ButtonStyle(
                   backgroundColor:
-                      MaterialStateColor.resolveWith((states) => Colors.blue)),
+                  MaterialStateColor.resolveWith((states) => Colors.blue)),
             ),
           ),
           SizedBox(
@@ -228,80 +210,144 @@ class _MeetingState extends State<Meeting> {
   }
 
   _joinMeeting() async {
-    String? serverUrl = serverText.text.trim().isEmpty ? null : serverText.text;
+    final String? serverUrl =
+    serverText.text.trim().isEmpty ? null : serverText.text;
 
-    // Enable or disable any feature flag here
-    // If feature flag are not provided, default values will be used
-    // Full list of feature flags (and defaults) available in the README
-    Map<FeatureFlagEnum, bool> featureFlags = {
+    final featureFlags = {
+      /*FeatureFlagEnum.ADD_PEOPLE_ENABLED: false,
+      FeatureFlagEnum.ANDROID_SCREENSHARING_ENABLED: false,
+      FeatureFlagEnum.AUDIO_FOCUS_DISABLED: false,
+      FeatureFlagEnum.AUDIO_MUTE_BUTTON_ENABLED: true,
+      FeatureFlagEnum.AUDIO_ONLY_BUTTON_ENABLED: false,
+      FeatureFlagEnum.CALENDAR_ENABLED: false,
+      FeatureFlagEnum.CAR_MODE_ENABLED: false,
+      FeatureFlagEnum.CLOSE_CAPTIONS_ENABLED: false,
+      FeatureFlagEnum.CONFERENCE_TIMER_ENABLED: false,
+      FeatureFlagEnum.CHAT_ENABLED: false,
+      FeatureFlagEnum.FILMSTRIP_ENABLED: false,
+      FeatureFlagEnum.FULLSCREEN_ENABLED: true,
+      FeatureFlagEnum.HELP_BUTTON_ENABLED: false,
+      FeatureFlagEnum.INVITE_ENABLED: false,
+      FeatureFlagEnum.IOS_RECORDING_ENABLED: false,
+      FeatureFlagEnum.IOS_SCREENSHARING_ENABLED: false,
+      FeatureFlagEnum.SPEAKERSTATS_ENABLED: false,
+      FeatureFlagEnum.KICK_OUT_ENABLED: false,
+      FeatureFlagEnum.LIVE_STREAMING_ENABLED: false,
+      FeatureFlagEnum.LOBBY_MODE_ENABLED: false,
+      FeatureFlagEnum.MEETING_NAME_ENABLED: false,
+      FeatureFlagEnum.MEETING_PASSWORD_ENABLED: false,
+      FeatureFlagEnum.NOTIFICATIONS_ENABLED: false,
+      FeatureFlagEnum.OVERFLOW_MENU_ENABLED: true,
+      FeatureFlagEnum.PIP_ENABLED: false,
+      FeatureFlagEnum.PREJOIN_PAGE_ENABLED: false,
+      FeatureFlagEnum.RAISE_HAND_ENABLED: false,
+      FeatureFlagEnum.REACTIONS_ENABLED: false,
+      FeatureFlagEnum.RECORDING_ENABLED: false,
+      FeatureFlagEnum.REPLACE_PARTICIPANT: false,*/
+      FeatureFlagEnum.RESOLUTION: FeatureFlagVideoResolution.MD_RESOLUTION,
+      /*FeatureFlagEnum.SECURITY_OPTIONS_ENABLED: false,
+      FeatureFlagEnum.SERVER_URL_CHANGE_ENABLED: false,
+      FeatureFlagEnum.SETTINGS_ENABLED: false,
+      FeatureFlagEnum.TILE_VIEW_ENABLED: true,
+      FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE: false,
+      FeatureFlagEnum.TOOLBOX_ENABLED: true,
+      FeatureFlagEnum.VIDEO_MUTE_BUTTON_ENABLED: true,
+      FeatureFlagEnum.VIDEO_SHARE_BUTTON_ENABLED: false,*/
       FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
     };
-    if (!kIsWeb) {
-      // Here is an example, disabling features for each platform
-      if (Platform.isAndroid) {
-        // Disable ConnectionService usage on Android to avoid issues (see README)
-        featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
-      } else if (Platform.isIOS) {
-        // Disable PIP on iOS as it looks weird
-        featureFlags[FeatureFlagEnum.PIP_ENABLED] = false;
-      }
+    if (!kIsWeb && Platform.isAndroid) {
+      featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
     }
     // Define meetings options here
-    var options = JitsiMeetingOptions(room: roomText.text)
-      ..serverURL = serverUrl
-      ..subject = subjectText.text
-      ..userDisplayName = nameText.text
-      ..userEmail = emailText.text
-      ..iosAppBarRGBAColor = iosAppBarRGBAColor.text
-      ..audioOnly = isAudioOnly
-      ..audioMuted = isAudioMuted
-      ..videoMuted = isVideoMuted
-      ..featureFlags.addAll(featureFlags)
-      ..webOptions = {
-        "roomName": roomText.text,
-        "width": "100%",
-        "height": "100%",
-        "enableWelcomePage": false,
-        "chromeExtensionBanner": null,
-        "userInfo": {"displayName": nameText.text}
-      };
+    final options = JitsiMeetingOptions(
+        room: roomText.text,
+        serverURL: serverUrl,
+        subject: subjectText.text,
+        userDisplayName: nameText.text,
+        userEmail: emailText.text,
+        iosAppBarRGBAColor: iosAppBarRGBAColor.text,
+        audioOnly: isAudioOnly,
+        audioMuted: isAudioMuted,
+        videoMuted: isVideoMuted,
+        featureFlags: featureFlags,
+        webOptions: {
+          "roomName": roomText.text,
+          "width": "100%",
+          "height": "100%",
+          "enableWelcomePage": false,
+          "enableNoAudioDetection": true,
+          "enableNoisyMicDetection": true,
+          "enableClosePage": false,
+          "prejoinPageEnabled": false,
+          "hideConferenceTimer": true,
+          "disableInviteFunctions": true,
+          "chromeExtensionBanner": null,
+          "configOverwrite": {
+            "prejoinPageEnabled": false,
+            "disableDeepLinking": true,
+            "enableLobbyChat": false,
+            "enableClosePage": false,
+            "chromeExtensionBanner": null,
+            /*"toolbarButtons": [
+              "microphone",
+              "camera",
+              "hangup",
+            ]*/
+          },
+          "userInfo": {"email": emailText.text, "displayName": nameText.text}
+        });
 
-    debugPrint("JitsiMeetingOptions: $options");
     await JitsiMeet.joinMeeting(
       options,
       listener: JitsiMeetingListener(
-          onConferenceWillJoin: (message) {
-            debugPrint("${options.room} will join with message: $message");
+          onOpened: () {
+            debugPrint("JitsiMeetingListener - onOpened");
           },
-          onConferenceJoined: (message) {
-            debugPrint("${options.room} joined with message: $message");
+          onClosed: () {
+            debugPrint("JitsiMeetingListener - onClosed");
           },
-          onConferenceTerminated: (message) {
-            debugPrint("${options.room} terminated with message: $message");
+          onError: (error) {
+            debugPrint("JitsiMeetingListener - onError: error: $error");
+          },
+          onConferenceWillJoin: (url) {
+            debugPrint(
+                "JitsiMeetingListener - onConferenceWillJoin: url: $url");
+          },
+          onConferenceJoined: (url) {
+            debugPrint("JitsiMeetingListener - onConferenceJoined: url:$url");
+          },
+          onConferenceTerminated: (url, error) {
+            debugPrint(
+                "JitsiMeetingListener - onConferenceTerminated: url: $url, error: $error");
+          },
+          onParticipantLeft: (participantId) {
+            debugPrint(
+                "JitsiMeetingListener - onParticipantLeft: $participantId");
+          },
+          onParticipantJoined: (email, name, role, participantId) {
+            debugPrint("JitsiMeetingListener - onParticipantJoined: "
+                "email: $email, name: $name, role: $role, "
+                "participantId: $participantId");
+          },
+          onAudioMutedChanged: (muted) {
+            debugPrint(
+                "JitsiMeetingListener - onAudioMutedChanged: muted: $muted");
+          },
+          onVideoMutedChanged: (muted) {
+            debugPrint(
+                "JitsiMeetingListener - onVideoMutedChanged: muted: $muted");
+          },
+          onScreenShareToggled: (participantId, isSharing) {
+            debugPrint("JitsiMeetingListener - onScreenShareToggled: "
+                "participantId: $participantId, isSharing: $isSharing");
           },
           genericListeners: [
             JitsiGenericListener(
                 eventName: 'readyToClose',
                 callback: (dynamic message) {
-                  debugPrint("readyToClose callback");
+                  debugPrint("JitsiMeetingListener - readyToClose callback");
                 }),
           ]),
     );
-  }
-
-  void _onConferenceWillJoin(message) {
-    debugPrint("_onConferenceWillJoin broadcasted with message: $message");
-  }
-
-  void _onConferenceJoined(message) {
-    debugPrint("_onConferenceJoined broadcasted with message: $message");
-  }
-
-  void _onConferenceTerminated(message) {
-    debugPrint("_onConferenceTerminated broadcasted with message: $message");
-  }
-
-  _onError(error) {
-    debugPrint("_onError broadcasted: $error");
   }
 }

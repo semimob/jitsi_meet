@@ -1,12 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:jitsi_meet_platform_interface/jitsi_meet_platform_interface.dart';
 
 import 'room_name_constraint.dart';
 import 'room_name_constraint_type.dart';
-
-import 'package:jitsi_meet_platform_interface/jitsi_meet_platform_interface.dart';
-
 export 'package:jitsi_meet_platform_interface/jitsi_meet_platform_interface.dart'
     show
         JitsiMeetingOptions,
@@ -14,11 +12,10 @@ export 'package:jitsi_meet_platform_interface/jitsi_meet_platform_interface.dart
         JitsiMeetingListener,
         JitsiGenericListener,
         FeatureFlagHelper,
+        FeatureFlagVideoResolution,
         FeatureFlagEnum;
 
 class JitsiMeet {
-  static bool _hasInitialized = false;
-
   static final Map<RoomNameConstraintType, RoomNameConstraint>
       defaultRoomNameConstraints = {
     RoomNameConstraintType.MIN_LENGTH: new RoomNameConstraint((value) {
@@ -64,31 +61,7 @@ class JitsiMeet {
         .joinMeeting(options, listener: listener);
   }
 
-  /// Initializes the event channel. Call when listeners are added
-  static _initialize() {
-    if (!_hasInitialized) {
-      JitsiMeetPlatform.instance.initialize();
-      _hasInitialized = true;
-    }
-  }
-
   static closeMeeting() => JitsiMeetPlatform.instance.closeMeeting();
-
-  /// Adds a JitsiMeetingListener that will broadcast conference events
-  static addListener(JitsiMeetingListener jitsiMeetingListener) {
-    JitsiMeetPlatform.instance.addListener(jitsiMeetingListener);
-    _initialize();
-  }
-
-  /// Removes the JitsiMeetingListener specified
-  static removeListener(JitsiMeetingListener jitsiMeetingListener) {
-    JitsiMeetPlatform.instance.removeListener(jitsiMeetingListener);
-  }
-
-  /// Removes all JitsiMeetingListeners
-  static removeAllListeners() {
-    JitsiMeetPlatform.instance.removeAllListeners();
-  }
 
   /// allow execute a command over a Jitsi live session (only for web)
   static executeCommand(String command, List<String> args) {

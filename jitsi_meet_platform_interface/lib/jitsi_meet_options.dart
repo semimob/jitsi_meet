@@ -4,32 +4,44 @@ import 'feature_flag/feature_flag_enum.dart';
 import 'feature_flag/feature_flag_helper.dart';
 
 class JitsiMeetingOptions {
+  final String room;
+  final String? serverURL;
+  final String? subject;
+  final String? token;
+  final bool? audioMuted;
+  final bool? audioOnly;
+  final bool? videoMuted;
+  final String? userAvatarURL;
+  final String? userDisplayName;
+  final String? userEmail;
+  final String? iosAppBarRGBAColor;
+  final Map<String, Object?>? webOptions; // options for web
+  final Map<FeatureFlagEnum, Object?>? featureFlags;
+  final Map<String, Object?>? configOverrides;
+
   JitsiMeetingOptions({
     required this.room,
+    this.serverURL,
+    this.subject,
+    this.token,
+    this.audioMuted,
+    this.audioOnly,
+    this.videoMuted,
+    this.userAvatarURL,
+    this.userDisplayName,
+    this.userEmail,
+    this.iosAppBarRGBAColor,
+    this.webOptions,
+    this.featureFlags,
+    this.configOverrides,
   });
-
-  final String room;
-  String? serverURL;
-  String? subject;
-  String? token;
-  bool? audioMuted;
-  bool? audioOnly;
-  bool? videoMuted;
-  String? userDisplayName;
-  String? userEmail;
-  String? iosAppBarRGBAColor;
-  String? userAvatarURL;
-
-  Map<String, dynamic>? webOptions; // options for web
-
-  Map<FeatureFlagEnum, bool> featureFlags = HashMap();
 
   /// Get feature flags Map with keys as String instead of Enum
   /// Useful as an argument sent to the Kotlin/Swift code
-  Map<String?, bool> getFeatureFlags() {
-    Map<String?, bool> featureFlagsWithStrings = HashMap();
+  Map<String?, dynamic> getFeatureFlags() {
+    Map<String?, dynamic> featureFlagsWithStrings = HashMap();
 
-    featureFlags.forEach((key, value) {
+    featureFlags?.forEach((key, value) {
       featureFlagsWithStrings[FeatureFlagHelper.featureFlags[key]] = value;
     });
 
@@ -38,16 +50,9 @@ class JitsiMeetingOptions {
 
   @override
   String toString() {
-    return 'JitsiMeetingOptions{room: $room, serverURL: $serverURL, '
+    return 'OMNI_JITSI - JitsiMeetingOptions { room: $room, serverURL: $serverURL, '
         'subject: $subject, token: $token, audioMuted: $audioMuted, '
         'audioOnly: $audioOnly, videoMuted: $videoMuted, '
-        'userDisplayName: $userDisplayName, userEmail: $userEmail, '
-        'iosAppBarRGBAColor :$iosAppBarRGBAColor, featureFlags: $featureFlags }';
+        'userDisplayName: $userDisplayName, userEmail: $userEmail }';
   }
-
-/* Not used yet, needs more research
-  Bundle colorScheme;
-  String userAvatarURL;
-*/
-
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:html' as html;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:jitsi_meet_platform_interface/jitsi_meet_platform_interface.dart';
@@ -14,9 +15,6 @@ import 'room_name_constraint_type.dart';
 
 /// JitsiMeetPlugin Web version for Jitsi Meet plugin
 class JitsiMeetPlugin extends JitsiMeetPlatform {
-  // List<JitsiMeetingListener> _listeners = <JitsiMeetingListener>[];
-  // Map<String, JitsiMeetingListener> _perMeetingListeners = {};
-
   /// `JitsiMeetExternalAPI` holder
   jitsi.JitsiMeetAPI? api;
 
@@ -44,8 +42,8 @@ class JitsiMeetPlugin extends JitsiMeetPlatform {
   @override
   Future<JitsiMeetingResponse> joinMeeting(JitsiMeetingOptions options,
       {JitsiMeetingListener? listener,
-      Map<RoomNameConstraintType, RoomNameConstraint>?
-          roomNameConstraints}) async {
+        Map<RoomNameConstraintType, RoomNameConstraint>?
+        roomNameConstraints}) async {
     // encode `options` Map to Json to avoid error
     // in interoperability conversions
     String webOptions = jsonEncode(options.webOptions);
@@ -55,38 +53,169 @@ class JitsiMeetPlugin extends JitsiMeetPlatform {
 
     // setup listeners
     if (listener != null) {
-      api?.on("videoConferenceJoined", allowInterop((dynamic _message) {
-        // Mapping object according with jitsi external api source code
-        Map<String, dynamic> message = {
-          "displayName": _message.displayName,
-          "roomName": _message.roomName
+      listener.onOpened?.call();
+
+      api?.on("chatUpdated", allowInterop((message) {
+        Map<String, dynamic> data = {
+          'isOpen': !kReleaseMode ? message.isOpen : false,
+          'unreadCount': !kReleaseMode ? message.unreadCount : 0,
         };
-        listener.onConferenceJoined?.call(message);
+
+        listener.onChatToggled?.call(
+          parseBool(data["isOpen"]),
+        );
       }));
-      api?.on("videoConferenceLeft", allowInterop((dynamic _message) {
-        // Mapping object according with jitsi external api source code
-        Map<String, dynamic> message = {"roomName": _message.roomName};
-        listener.onConferenceTerminated?.call(message);
+
+      api?.on("incomingMessage", allowInterop((message) {
+        Map<String, dynamic> data = {
+          'senderId': !kReleaseMode ? message.from : '?',
+          'nick': !kReleaseMode ? message.nick : '?',
+          'isPrivate': !kReleaseMode ? message.privateMessage : false,
+          'message': !kReleaseMode ? message.message : '?',
+          'timestamp': DateTime.now().toUtc(),
+        };
+
+        listener.onChatMessageReceived?.call(
+          data["senderId"]?.toString() ?? '?',
+          data["message"]?.toString() ?? '?',
+          parseBool(data["isPrivate"]),
+          data["timestamp"].toString(),
+        );
       }));
-      api?.on("feedbackSubmitted", allowInterop((dynamic message) {
-        debugPrint("feedbackSubmitted message: $message");
-        listener.onError?.call(message);
+
+      api?.on("audioMuteStatusChanged", allowInterop((message) {
+        Map<String, dynamic> data = {
+          'muted': !kReleaseMode ? message.muted : false,
+        };
+
+        listener.onAudioMutedChanged?.call(
+          parseBool(data["muted"]),
+        );
+      }));
+
+      api?.on("videoMuteStatusChanged", allowInterop((message) {
+        Map<String, dynamic> data = {
+          'muted': !kReleaseMode ? message.muted : false,
+        };
+
+        listener.onVideoMutedChanged?.call(
+          parseBool(data["muted"], isVideoMutedChanged: true),
+        );
+      }));
+
+      api?.on("screenSharingStatusChanged", allowInterop((message) {
+        Map<String, dynamic> data = {
+          'sharing': !kReleaseMode ? message.on : false,
+          'details': !kReleaseMode ? message.details : {},
+          'participantId': !kReleaseMode ? message.id : '?',
+        };
+
+        listener.onScreenShareToggled?.call(
+          data["participantId"]?.toString() ?? '?',
+          parseBool(data["sharing"]),
+        );
+      }));
+
+      api?.on("participantsInfoRetrieved", allowInterop((message) {
+        Map<String, dynamic> data = {
+          'participantsInfo': !kReleaseMode ? message.participantsInfo : {},
+          'requestId': !kReleaseMode ? message.requestId : '?'
+        };
+
+        listener.onParticipantsInfoRetrieved?.call(
+          data["participantsInfo"] ?? {},
+          data["requestId"]?.toString() ?? '?',
+        );
+      }));
+
+      api?.on("videoConferenceJoined", allowInterop((message) {
+        Map<String, dynamic> data = {
+          'url': !kReleaseMode ? message.roomName : '?',
+          'id': !kReleaseMode ? message.id : '?',
+          'displayName': !kReleaseMode ? message.displayName : '?',
+          'avatarURL': !kReleaseMode ? message.avatarURL : '',
+          'breakoutRoom': !kReleaseMode ? message.breakoutRoom : false,
+        };
+
+        listener.onConferenceJoined?.call(
+          data["url"].toString(),
+        );
+      }));
+
+      api?.on("videoConferenceLeft", allowInterop((message) {
+        Map<String, dynamic> data = {
+          'url': !kReleaseMode ? message.roomName : '?',
+          'error': message?.error,
+        };
+
+        listener.onConferenceTerminated?.call(
+          data["url"].toString(),
+          data["error"],
+        );
+
+        listener.onClosed?.call();
+      }));
+
+      api?.on("participantJoined", allowInterop((message) {
+        Map<String, dynamic> data = {
+          'email': !kReleaseMode ? message.email : '?',
+          'name': !kReleaseMode ? message.displayName : '?',
+          'role': !kReleaseMode ? message.role : '?',
+          'participantId': !kReleaseMode ? message.id : '?',
+        };
+
+        listener.onParticipantJoined?.call(
+            data["email"]?.toString() ?? "?",
+            data["name"]?.toString() ?? "?",
+            data["role"]?.toString() ?? "?",
+            data["participantId"]?.toString() ?? "?");
+      }));
+
+      api?.on("participantLeft", allowInterop((message) {
+        Map<String, dynamic> data = {
+          "participantId": !kReleaseMode ? message.id : '?',
+        };
+
+        listener.onParticipantLeft?.call(
+          data["participantId"]?.toString() ?? "?",
+        );
+      }));
+
+      api?.on("feedbackSubmitted", allowInterop((message) {
+        Map<String, dynamic> data = {
+          "error": !kReleaseMode ? message.error : '?',
+        };
+
+        listener.onError?.call(
+          data["error"]?.toString() ?? "?",
+        );
       }));
 
       // NOTE: `onConferenceWillJoin` is not supported or nof found event in web
-
-      // add geeric listener
+      // add generic listener
       _addGenericListeners(listener);
-
-      // force to dispose view when close meeting
-      // this is needed to allow create another room in
-      // the same view without reload it
-      api?.on("readyToClose", allowInterop((dynamic message) {
+      api?.on("readyToClose", allowInterop((message) {
+        listener.onClosed?.call();
         api?.dispose();
       }));
     }
 
     return JitsiMeetingResponse(isSuccess: true);
+  }
+
+  /// Required because Android SDK returns boolean values as Strings
+  /// and iOS SDK returns boolean values as Booleans.
+  /// (Making this an extension does not work, because of dynamic.)
+  bool parseBool(dynamic value, {bool isVideoMutedChanged = false}) {
+    if (value is bool) return value;
+    if (isVideoMutedChanged && value is String) {
+      return value != '0.0';
+    }
+
+    if (value is String) return value == 'true';
+    if (value is num) return value != 0;
+
+    throw ArgumentError('Unsupported type: $value');
   }
 
   // add generic lister over current session
@@ -117,14 +246,12 @@ class JitsiMeetPlugin extends JitsiMeetPlatform {
 
   /// Adds a JitsiMeetingListener that will broadcast conference events
   addListener(JitsiMeetingListener jitsiMeetingListener) {
-    debugPrint("Adding listeners");
     _addGenericListeners(jitsiMeetingListener);
   }
 
   /// Remove JitsiListener
   /// Remove all list of listeners bassed on event name
   removeListener(JitsiMeetingListener jitsiMeetingListener) {
-    debugPrint("Removing listeners");
     List<String> listeners = [];
     if (jitsiMeetingListener.onConferenceJoined != null) {
       listeners.add("videoConferenceJoined");
@@ -133,7 +260,7 @@ class JitsiMeetPlugin extends JitsiMeetPlatform {
     if (jitsiMeetingListener.onConferenceTerminated != null) {
       listeners.add("videoConferenceLeft");
     }
-    ;
+
     jitsiMeetingListener.genericListeners
         ?.forEach((element) => listeners.add(element.eventName));
     api?.removeEventListener(listeners);
@@ -143,19 +270,20 @@ class JitsiMeetPlugin extends JitsiMeetPlatform {
   /// Not used for web
   removeAllListeners() {}
 
+  /// Initialize
   void initialize() {}
 
   @override
   Widget buildView(List<String> extraJS) {
     // ignore: undefined_prefixed_name
     ui.platformViewRegistry.registerViewFactory('jitsi-meet-view',
-        (int viewId) {
-      final div = html.DivElement()
-        ..id = "jitsi-meet-section"
-        ..style.width = '100%'
-        ..style.height = '100%';
-      return div;
-    });
+            (int viewId) {
+          final div = html.DivElement()
+            ..id = "jitsi-meet-section"
+            ..style.width = '100%'
+            ..style.height = '100%';
+          return div;
+        });
     // add extraJS only once
     // this validation is needed because the view can be
     // rebuileded several times
@@ -167,15 +295,15 @@ class JitsiMeetPlugin extends JitsiMeetPlatform {
     return HtmlElementView(viewType: 'jitsi-meet-view');
   }
 
-  // setu extra JS Scripts
+  // setup extra JS Scripts
   void _setupExtraScripts(List<String> extraJS) {
     extraJS.forEach((element) {
       RegExp regExp = RegExp(r"<script[^>]*>(.*?)<\/script[^>]*>");
       if (regExp.hasMatch(element)) {
         final html.NodeValidatorBuilder validator =
-            html.NodeValidatorBuilder.common()
-              ..allowElement('script',
-                  attributes: ['type', 'crossorigin', 'integrity', 'src']);
+        html.NodeValidatorBuilder.common()
+          ..allowElement('script',
+              attributes: ['type', 'crossorigin', 'integrity', 'src']);
         debugPrint("ADD script $element");
         html.Element script = html.Element.html(element, validator: validator);
         html.querySelector('head')?.children.add(script);
@@ -216,3 +344,4 @@ class JitsiMeetAPI extends JitsiMeetExternalAPI {
 }
 var jitsi = { JitsiMeetAPI: JitsiMeetAPI };""";
 }
+

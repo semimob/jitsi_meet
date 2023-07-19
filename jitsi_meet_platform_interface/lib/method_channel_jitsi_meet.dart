@@ -1,156 +1,183 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
-import 'jitsi_meet_options.dart';
 import 'jitsi_meet_platform_interface.dart';
-import 'jitsi_meet_response.dart';
-import 'jitsi_meeting_listener.dart';
 
-const MethodChannel _channel = MethodChannel('jitsi_meet');
-
+const MethodChannel _methodChannel = MethodChannel('jitsi_meet');
 const EventChannel _eventChannel = const EventChannel('jitsi_meet_events');
 
 /// An implementation of [JitsiMeetPlatform] that uses method channels.
 class MethodChannelJitsiMeet extends JitsiMeetPlatform {
-  List<JitsiMeetingListener> _listeners = <JitsiMeetingListener>[];
-  Map<String, JitsiMeetingListener> _perMeetingListeners = {};
+  bool _eventChannelIsInitialized = false;
+  JitsiMeetingListener? _listener;
 
   @override
   Future<JitsiMeetingResponse> joinMeeting(
     JitsiMeetingOptions options, {
     JitsiMeetingListener? listener,
   }) async {
-    // Attach a listener if it exists. The key is based on the serverURL + room
-    if (listener != null) {
-      String serverURL = options.serverURL ?? "https://meet.jit.si";
-      String key;
-      if (serverURL.endsWith("/")) {
-        key = serverURL + options.room;
-      } else {
-        key = serverURL + "/" + options.room;
-      }
-
-      _perMeetingListeners.update(key, (oldListener) => listener,
-          ifAbsent: () => listener);
-      initialize();
+    _listener = listener;
+    if (!_eventChannelIsInitialized) {
+      _initialize();
     }
+
     Map<String, dynamic> _options = {
       'room': options.room.trim(),
       'serverURL': options.serverURL?.trim(),
-      'subject': options.subject,
+      'subject': options.subject?.trim(),
       'token': options.token,
       'audioMuted': options.audioMuted,
       'audioOnly': options.audioOnly,
       'videoMuted': options.videoMuted,
-      'featureFlags': options.getFeatureFlags(),
+      'userAvatarURL': options.userAvatarURL,
       'userDisplayName': options.userDisplayName,
       'userEmail': options.userEmail,
       'iosAppBarRGBAColor': options.iosAppBarRGBAColor,
+      'featureFlags': options.getFeatureFlags(),
     };
 
-    return await _channel
+    return await _methodChannel
         .invokeMethod<String>('joinMeeting', _options)
-        .then((message) =>
-            JitsiMeetingResponse(isSuccess: true, message: message))
-        .catchError(
-      (error) {
-        return JitsiMeetingResponse(
-            isSuccess: true, message: error.toString(), error: error);
-      },
-    );
-  }
-
-  @override
-  closeMeeting() {
-    _channel.invokeMethod('closeMeeting');
-  }
-
-  @override
-  addListener(JitsiMeetingListener jitsiMeetingListener) {
-    _listeners.add(jitsiMeetingListener);
-    initialize();
-  }
-
-  @override
-  removeListener(JitsiMeetingListener jitsiMeetingListener) {
-    _listeners.remove(jitsiMeetingListener);
-  }
-
-  @override
-  removeAllListeners() {
-    _listeners.clear();
+        .then((message) {
+      return JitsiMeetingResponse(isSuccess: true, message: message);
+    }).catchError((error) {
+      return JitsiMeetingResponse(
+        isSuccess: false,
+        message: error.toString(),
+        error: error,
+      );
+    });
   }
 
   @override
   void executeCommand(String command, List<String> args) {}
 
   @override
-  Widget buildView(List<String> extraJS) {
-    // return empty container for compatibily
-    return Container();
+  Future<JitsiMeetingResponse> setAudioMuted(bool isMuted) async {
+    Map<String, dynamic> _options = {
+      'isMuted': isMuted,
+    };
+    return await _methodChannel
+        .invokeMethod<String>('setAudioMuted', _options)
+        .then((message) {
+      return JitsiMeetingResponse(isSuccess: true, message: message);
+    }).catchError((error) {
+      return JitsiMeetingResponse(
+        isSuccess: false,
+        message: error.toString(),
+        error: error,
+      );
+    });
   }
 
   @override
-  void initialize() {
-    _eventChannel.receiveBroadcastStream().listen((dynamic message) {
-      _broadcastToGlobalListeners(message);
-      _broadcastToPerMeetingListeners(message);
-    }, onError: (dynamic error) {
-      debugPrint('Jitsi Meet broadcast error: $error');
-      _listeners.forEach((listener) {
-        if (listener.onError != null) listener.onError!(error);
-      });
-      _perMeetingListeners.forEach((key, listener) {
-        if (listener.onError != null) listener.onError!(error);
-      });
+  Future<JitsiMeetingResponse> hangUp() async {
+    return await _methodChannel.invokeMethod<String>('hangUp').then((message) {
+      return JitsiMeetingResponse(isSuccess: true, message: message);
+    }).catchError((error) {
+      return JitsiMeetingResponse(
+        isSuccess: false,
+        message: error.toString(),
+        error: error,
+      );
     });
   }
 
-  /// Sends a broadcast to global listeners added using addListener
-  void _broadcastToGlobalListeners(message) {
-    _listeners.forEach((listener) {
+  void _initialize() {
+    _eventChannel.receiveBroadcastStream().listen((message) {
+      final data = message['data'];
       switch (message['event']) {
-        case "onConferenceWillJoin":
-          if (listener.onConferenceWillJoin != null)
-            listener.onConferenceWillJoin!(message);
+        case "opened":
+          _listener?.onOpened?.call();
           break;
-        case "onConferenceJoined":
-          if (listener.onConferenceJoined != null)
-            listener.onConferenceJoined!(message);
+        case "onPictureInPictureWillEnter":
+          _listener?.onPictureInPictureWillEnter?.call();
           break;
-        case "onConferenceTerminated":
-          if (listener.onConferenceTerminated != null)
-            listener.onConferenceTerminated!(message);
+        case "onPictureInPictureTerminated":
+          _listener?.onPictureInPictureTerminated?.call();
+          break;
+        case "conferenceWillJoin":
+          _listener?.onConferenceWillJoin?.call(data["url"].toString());
+          break;
+        case "conferenceJoined":
+          _listener?.onConferenceJoined?.call(data["url"].toString());
+          break;
+        case "conferenceTerminated":
+          _listener?.onConferenceTerminated
+              ?.call(data["url"].toString(), data["error"]);
+          break;
+        case "audioMutedChanged":
+          _listener?.onAudioMutedChanged?.call(parseBool(data["muted"]));
+          break;
+        case "videoMutedChanged":
+          _listener?.onVideoMutedChanged
+              ?.call(parseBool(data["muted"], isVideoMutedChanged: true));
+          break;
+        case "screenShareToggled":
+          _listener?.onScreenShareToggled
+              ?.call(data["participantId"], parseBool(data["sharing"]));
+          break;
+        case "participantJoined":
+          _listener?.onParticipantJoined?.call(
+            data["email"].toString(),
+            data["name"].toString(),
+            data["role"].toString(),
+            data["participantId"].toString(),
+          );
+          break;
+        case "participantLeft":
+          _listener?.onParticipantLeft?.call(data["participantId"]);
+          break;
+        case "participantsInfoRetrieved":
+          _listener?.onParticipantsInfoRetrieved?.call(
+            data["participantsInfo"],
+            data["requestId"],
+          );
+          break;
+        case "chatMessageReceived":
+          _listener?.onChatMessageReceived?.call(
+            data["senderId"],
+            data["message"],
+            parseBool(data["isPrivate"]),
+            DateTime.now().toUtc().toString(),
+          );
+          break;
+        case "chatToggled":
+          _listener?.onChatToggled?.call(parseBool(data["isOpen"]));
+          break;
+        case "closed":
+          _listener?.onClosed?.call();
+          _listener = null;
           break;
       }
+    }).onError((error) {
+      debugPrint(
+          "OMNI_JITSI: Error receiving data from the event channel: $error");
+      _listener?.onError?.call(error);
     });
+    _eventChannelIsInitialized = true;
   }
 
-  /// Sends a broadcast to per meeting listeners added during joinMeeting
-  void _broadcastToPerMeetingListeners(message) {
-    String? url = message['url'];
-    final listener = _perMeetingListeners[url];
-    if (listener != null) {
-      switch (message['event']) {
-        case "onConferenceWillJoin":
-          if (listener.onConferenceWillJoin != null)
-            listener.onConferenceWillJoin!(message);
-          break;
-        case "onConferenceJoined":
-          if (listener.onConferenceJoined != null)
-            listener.onConferenceJoined!(message);
-          break;
-        case "onConferenceTerminated":
-          if (listener.onConferenceTerminated != null)
-            listener.onConferenceTerminated!(message);
-
-          // Remove the listener from the map of _perMeetingListeners on terminate
-          _perMeetingListeners.remove(listener);
-          break;
-      }
-    }
+  @override
+  closeMeeting() {
+    _methodChannel.invokeMethod('closeMeeting');
   }
+
+  @override
+  Widget buildView(List<String> extraJS) => const SizedBox.shrink();
+}
+
+bool parseBool(dynamic value, {bool isVideoMutedChanged = false}) {
+  if (value is bool) return value;
+
+  if (isVideoMutedChanged && value is String) {
+    return value != '0.0';
+  }
+
+  if (value is String) return value == 'true';
+  if (value is num) return value != 0;
+
+  throw ArgumentError('OMNI_JITSI: Unsupported type: $value');
 }
