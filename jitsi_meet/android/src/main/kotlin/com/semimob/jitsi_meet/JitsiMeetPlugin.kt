@@ -3,6 +3,7 @@ package com.semimob.jitsi_meet
 import android.app.Activity
 import android.content.Intent
 import android.content.BroadcastReceiver
+import android.util.Log
 import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -180,6 +181,7 @@ public class JitsiMeetPlugin() : FlutterPlugin, MethodCallHandler,
     }
 
     private fun hangUp(call: MethodCall, result: Result) {
+        Log.d("JITSI_MEET_PLUGIN", "hangUp: $result")
         val hangUpIntent: Intent = BroadcastIntentHelper.buildHangUpIntent()
         LocalBroadcastManager.getInstance(activity!!.applicationContext)
             .sendBroadcast(hangUpIntent)
