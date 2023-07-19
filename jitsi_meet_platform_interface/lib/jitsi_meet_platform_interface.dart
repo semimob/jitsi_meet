@@ -37,27 +37,27 @@ abstract class JitsiMeetPlatform extends PlatformInterface {
   Future<JitsiMeetingResponse> joinMeeting(JitsiMeetingOptions options,
       {JitsiMeetingListener? listener}) async {
     throw UnimplementedError(
-        'OMNI_JITSI: joinMeeting has not been implemented.');
+        'jitsi_meet: joinMeeting has not been implemented.');
   }
 
   Future<JitsiMeetingResponse> setAudioMuted(bool isMuted) async {
     throw UnimplementedError(
-        'OMNI_JITSI: setAudioMuted has not been implemented.');
+        'jitsi_meet: setAudioMuted has not been implemented.');
   }
 
   Future<JitsiMeetingResponse> hangUp() async {
-    throw UnimplementedError('OMNI_JITSI: hangUp has not been implemented.');
+    throw UnimplementedError('jitsi_meet: hangUp has not been implemented.');
   }
 
   closeMeeting() {
     throw UnimplementedError(
-        'OMNI_JITSI: joinMeeting has not been implemented.');
+        'jitsi_meet: joinMeeting has not been implemented.');
   }
 
   /// execute command interface, use only in web
   void executeCommand(String command, List<String> args) {
     throw UnimplementedError(
-        'OMNI_JITSI: executeCommand has not been implemented.');
+        'jitsi_meet: executeCommand has not been implemented.');
   }
 
   /// buildView
@@ -67,6 +67,6 @@ abstract class JitsiMeetPlatform extends PlatformInterface {
   /// for mobile is not need because the conferecing view get all device screen
   Widget buildView(List<String> extraJS) {
     throw UnimplementedError(
-        'OMNI_JITSI: _buildView has not been implemented.');
+        'jitsi_meet: _buildView has not been implemented.');
   }
 }

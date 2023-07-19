@@ -50,7 +50,7 @@ class JitsiMeetingOptions {
 
   @override
   String toString() {
-    return 'OMNI_JITSI - JitsiMeetingOptions { room: $room, serverURL: $serverURL, '
+    return 'jitsi_meet: JitsiMeetingOptions { room: $room, serverURL: $serverURL, '
         'subject: $subject, token: $token, audioMuted: $audioMuted, '
         'audioOnly: $audioOnly, videoMuted: $videoMuted, '
         'userDisplayName: $userDisplayName, userEmail: $userEmail }';

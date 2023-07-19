@@ -26,26 +26,31 @@ apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
-    lintOptions {
-        disable 'InvalidPackage'
-    }
-
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.gunschu.jitsi_meet_example"
-        minSdkVersion 23 //Required for Jitsi
-        targetSdkVersion 30
+        applicationId "com.semimob.jitsi_meet_example"
+        minSdkVersion 24 //Required for Jitsi
+        targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
 
     buildTypes {
+        debug {
+            debuggable true
+            minifyEnabled false // Not activate in development
+            shrinkResources false // Not activate in development
+            signingConfig signingConfigs.debug // Development signing apk
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules-debug.pro'
+            // Development rules
+        }
+
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
@@ -53,10 +58,13 @@ android {
 
             // Add below 3 lines for proguard
             minifyEnabled true
-            useProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    lint {
+        disable 'InvalidPackage'
+    }
+    namespace 'com.semimob.jitsi_meet_example'
 }
 
 flutter {

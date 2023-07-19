@@ -11,7 +11,7 @@ class JitsiMeetingResponse {
 
   @override
   String toString() {
-    return 'OMNI_JITSI: JitsiMeetingResponse { isSuccess: $isSuccess, '
-        'message: $message, error: $error }';
+    return 'JitsiMeetingResponse{isSuccess: $isSuccess, '
+        'message: $message, error: $error}';
   }
 }

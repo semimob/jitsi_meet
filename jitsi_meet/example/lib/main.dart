@@ -20,7 +20,7 @@ class Meeting extends StatefulWidget {
 
 class _MeetingState extends State<Meeting> {
   final serverText = TextEditingController();
-  final roomText = TextEditingController(text: "omni_room_sample_1234");
+  final roomText = TextEditingController(text: "room_sample_1234");
   final subjectText = TextEditingController(text: "Subject1");
   final nameText = TextEditingController(text: "User1");
   final emailText = TextEditingController(text: "fake1@email.com");

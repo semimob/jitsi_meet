@@ -1,155 +1,170 @@
 import UIKit
 import JitsiMeetSDK
 
-class JitsiViewController: UIViewController {
-    
-    @IBOutlet weak var videoButton: UIButton?
-    
-    fileprivate var pipViewCoordinator: PiPViewCoordinator?
-    fileprivate var jitsiMeetView: JitsiMeetView?
-    
-    var eventSink:FlutterEventSink? = nil
-    var roomName:String? = nil
-    var serverUrl:URL? = nil
-    var subject:String? = nil
-    var audioOnly:Bool? = false
-    var audioMuted: Bool? = false
-    var videoMuted: Bool? = false
-    var token:String? = nil
-    var featureFlags: Dictionary<String, Any>? = Dictionary();
-    
-    
-    var jistiMeetUserInfo = JitsiMeetUserInfo()
-    
-    override func loadView() {
-        
-        super.loadView()
+class JitsiMeetWrapperViewController: UIViewController {
+    fileprivate var pipViewCoordinator: CustomPiPViewCoordinator?
+    fileprivate var jitsiMeetView: UIView?
+    var sourceJitsiMeetView: JitsiMeetView?
+
+    let options: JitsiMeetConferenceOptions
+    let eventSink: FlutterEventSink
+
+    // https://stackoverflow.com/a/55208383/6172447
+    init(options: JitsiMeetConferenceOptions, eventSink: @escaping FlutterEventSink) {
+        self.options = options;
+        self.eventSink = eventSink;
+        // Need to pass in nibName and bundle otherwise an error occurs.
+        super.init(nibName: nil, bundle: nil)
     }
-    
-    @objc func openButtonClicked(sender : UIButton){
-        
-        //openJitsiMeetWithOptions();
+
+    // https://stackoverflow.com/a/55208383/6172447
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) is not supported")
     }
-    
-    @objc func closeButtonClicked(sender : UIButton){
-        cleanUp();
-        self.dismiss(animated: true, completion: nil)
-    }
-    
+
     override func viewDidLoad() {
-        
-        //print("VIEW DID LOAD")
-        self.view.backgroundColor = .black
         super.viewDidLoad()
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
+        self.eventSink(["event": "opened"])
+        // Open Jitsi in viewDidLoad as it should only be opened once per view controller.
         openJitsiMeet();
     }
-    
-    override func viewWillTransition(to size: CGSize,
-                                     with coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransition(to: size, with: coordinator)
-        let rect = CGRect(origin: CGPoint.zero, size: size)
-        pipViewCoordinator?.resetBounds(bounds: rect)
-    }
-    
+
     func openJitsiMeet() {
         cleanUp()
-        // create and configure jitsimeet view
-        let jitsiMeetView = JitsiMeetView()
-        
-        
-        jitsiMeetView.delegate = self
+
+        sourceJitsiMeetView = JitsiMeetView()
+        // Need to wrap the jitsi view in another view that absorbs all the pointer events
+        // because of a flutter bug: https://github.com/flutter/flutter/issues/14720
+        let jitsiMeetView = AbsorbPointersView()
+        jitsiMeetView.backgroundColor = .black
         self.jitsiMeetView = jitsiMeetView
-        let options = JitsiMeetConferenceOptions.fromBuilder { (builder) in
-            builder.welcomePageEnabled = true
-            builder.room = self.roomName
-            builder.serverURL = self.serverUrl
-            builder.subject = self.subject
-            builder.userInfo = self.jistiMeetUserInfo
-            builder.audioOnly = self.audioOnly ?? false
-            builder.audioMuted = self.audioMuted ?? false
-            builder.videoMuted = self.videoMuted ?? false
-            builder.token = self.token
-            
-            self.featureFlags?.forEach{ key,value in
-                builder.setFeatureFlag(key, withValue: value);
-            }
-            
-        }
-        
-        jitsiMeetView.join(options)
-        
+
+        jitsiMeetView.addSubview(sourceJitsiMeetView!)
+
+        // Make the jitsi view redraw when orientation changes.
+        // From: https://stackoverflow.com/a/45860445/6172447
+        sourceJitsiMeetView!.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+
+        sourceJitsiMeetView!.delegate = self
+        sourceJitsiMeetView!.join(options)
+
+        // Pip only works inside the app and not OS wide at the moment:
+        // https://github.com/jitsi/jitsi-meet/issues/3515#issuecomment-427846699
+        //
         // Enable jitsimeet view to be a view that can be displayed
         // on top of all the things, and let the coordinator to manage
         // the view state and interactions
-        pipViewCoordinator = PiPViewCoordinator(withView: jitsiMeetView)
+        pipViewCoordinator = CustomPiPViewCoordinator(withView: jitsiMeetView)
         pipViewCoordinator?.configureAsStickyView(withParentView: view)
-        
+
         // animate in
         jitsiMeetView.alpha = 0
         pipViewCoordinator?.show()
     }
-    
-    func closeJitsiMeeting(){
-        jitsiMeetView?.leave()
+
+    override func viewWillTransition(to size: CGSize,
+                                     with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+
+        let rect = CGRect(origin: CGPoint.zero, size: size)
+        pipViewCoordinator?.resetBounds(bounds: rect)
     }
-    
+
     fileprivate func cleanUp() {
         jitsiMeetView?.removeFromSuperview()
         jitsiMeetView = nil
         pipViewCoordinator = nil
-        //self.dismiss(animated: true, completion: nil)
+        sourceJitsiMeetView = nil
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.eventSink(["event": "closed"])
     }
 }
 
-extension JitsiViewController: JitsiMeetViewDelegate {
-    
-    func conferenceWillJoin(_ data: [AnyHashable : Any]!) {
-        //        print("CONFERENCE WILL JOIN")
-        var mutatedData = data
-        mutatedData?.updateValue("onConferenceWillJoin", forKey: "event")
-        self.eventSink?(mutatedData)
-    }
-    
-    func conferenceJoined(_ data: [AnyHashable : Any]!) {
-        //        print("CONFERENCE JOINED")
-        var mutatedData = data
-        mutatedData?.updateValue("onConferenceJoined", forKey: "event")
-        self.eventSink?(mutatedData)
-    }
-    
-    func conferenceTerminated(_ data: [AnyHashable : Any]!) {
-        //        print("CONFERENCE TERMINATED")
-        var mutatedData = data
-        mutatedData?.updateValue("onConferenceTerminated", forKey: "event")
-        self.eventSink?(mutatedData)
-        
+extension JitsiMeetWrapperViewController: JitsiMeetViewDelegate {
+    func ready(toClose data: [AnyHashable : Any]) {
         DispatchQueue.main.async {
-            self.pipViewCoordinator?.hide() { _ in
+            self.pipViewCoordinator?.hide { _ in
                 self.cleanUp()
                 self.dismiss(animated: true, completion: nil)
             }
         }
-        
     }
-    
-    func enterPicture(inPicture data: [AnyHashable : Any]!) {
-        //        print("CONFERENCE PIP IN")
-        var mutatedData = data
-        mutatedData?.updateValue("onPictureInPictureWillEnter", forKey: "event")
-        self.eventSink?(mutatedData)
+
+    func conferenceJoined(_ data: [AnyHashable : Any]) {
+        self.eventSink(["event": "conferenceJoined", "data": data])
+    }
+
+    func conferenceTerminated(_ data: [AnyHashable: Any]) {
+        self.eventSink(["event": "conferenceTerminated", "data": data])
+    }
+
+    func conferenceWillJoin(_ data: [AnyHashable : Any]) {
+        self.eventSink(["event": "conferenceWillJoin", "data": data])
+    }
+
+    func enterPicture(inPicture data: [AnyHashable: Any]) {
         DispatchQueue.main.async {
             self.pipViewCoordinator?.enterPictureInPicture()
         }
     }
-    
-    func exitPictureInPicture() {
-        //        print("CONFERENCE PIP OUT")
-        var mutatedData : [AnyHashable : Any]
-        mutatedData = ["event":"onPictureInPictureTerminated"]
-        self.eventSink?(mutatedData)
+
+    func participantJoined(_ data: [AnyHashable : Any]) {
+        self.eventSink(["event": "participantJoined", "data": data])
+    }
+
+    func participantLeft(_ data: [AnyHashable : Any]) {
+        self.eventSink(["event": "participantLeft", "data": data])
+    }
+
+    func audioMutedChanged(_ data: [AnyHashable : Any]) {
+        self.eventSink(["event": "audioMutedChanged", "data": data])
+    }
+
+    func endpointTextMessageReceived(_ data: [AnyHashable : Any]) {
+        self.eventSink(["event": "endpointTextMessageReceived", "data": data])
+    }
+
+    func screenShareToggled(_ data: [AnyHashable : Any]) {
+        self.eventSink(["event": "screenShareToggled", "data": data])
+    }
+
+    func chatMessageReceived(_ data: [AnyHashable : Any]) {
+        self.eventSink(["event": "chatMessageReceived", "data": data])
+    }
+
+    func chatToggled(_ data: [AnyHashable : Any]) {
+        self.eventSink(["event": "chatToggled", "data": data])
+    }
+
+    func videoMutedChanged(_ data: [AnyHashable : Any]) {
+        self.eventSink(["event": "videoMutedChanged", "data": data])
+    }
+
+    func opened() {
+        self.eventSink(["event": "opened"])
+    }
+
+    func closed() {
+        self.eventSink(["event": "closed"])
     }
 }
+
+// This is based on https://github.com/flutter/flutter/issues/35784#issuecomment-516274701.
+class AbsorbPointersView: UIView {
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    }
+
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+    }
+
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+    }
+}
+
 

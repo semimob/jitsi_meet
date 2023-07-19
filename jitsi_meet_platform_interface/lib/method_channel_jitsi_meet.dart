@@ -154,7 +154,7 @@ class MethodChannelJitsiMeet extends JitsiMeetPlatform {
       }
     }).onError((error) {
       debugPrint(
-          "OMNI_JITSI: Error receiving data from the event channel: $error");
+          "jitsi_meet: Error receiving data from the event channel: $error");
       _listener?.onError?.call(error);
     });
     _eventChannelIsInitialized = true;
@@ -179,5 +179,5 @@ bool parseBool(dynamic value, {bool isVideoMutedChanged = false}) {
   if (value is String) return value == 'true';
   if (value is num) return value != 0;
 
-  throw ArgumentError('OMNI_JITSI: Unsupported type: $value');
+  throw ArgumentError('jitsi_meet: Unsupported type: $value');
 }
