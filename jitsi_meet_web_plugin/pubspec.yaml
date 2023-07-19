@@ -11,7 +11,11 @@ dependencies:
     sdk: flutter
 
   plugin_platform_interface: ^2.1.4
-  jitsi_meet_platform_interface: ^2.0.0
+  jitsi_meet_platform_interface:
+    git:
+      url: https://github.com/semimob/jitsi_meet
+      ref: linh-dev
+      path: jitsi_meet_platform_interface
 
   flutter_web_plugins:
     sdk: flutter
