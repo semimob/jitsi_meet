@@ -72,11 +72,11 @@ public class JitsiMeetPlugin() : FlutterPlugin, MethodCallHandler,
         @NonNull call: MethodCall,
         @NonNull result: Result
     ) {
-
+        Log.d("<<JITSI_MEET_PLUGIN>>", "onMethodCall: " + call.method)
         when (call.method) {
             "joinMeeting" -> joinMeeting(call, result)
             "setAudioMuted" -> setAudioMuted(call, result)
-            "handUp" -> hangUp(call, result)
+            "hangUp" -> hangUpCall(call, result)
             "closeMeeting" -> closeMeeting(call, result)
             else -> result.notImplemented()
         }
@@ -180,13 +180,9 @@ public class JitsiMeetPlugin() : FlutterPlugin, MethodCallHandler,
         result.success("Successfully set audio muted to: $isMuted")
     }
 
-    private fun hangUp(call: MethodCall, result: Result) {
-        Log.d("JITSI_MEET_PLUGIN", "hangUp: $result")
-        val hangUpIntent: Intent = BroadcastIntentHelper.buildHangUpIntent()
-        LocalBroadcastManager.getInstance(activity!!.applicationContext)
-            .sendBroadcast(hangUpIntent)
-
-        closeMeeting(call, result);
-        result.success("Successfully hung up.")
+    private fun hangUpCall(call: MethodCall, result: Result) {
+        Log.d("<<JITSI_MEET_PLUGIN>>", " hangUp")
+        val hangupBroadcastIntent: Intent = BroadcastIntentHelper.buildHangUpIntent()
+        LocalBroadcastManager.getInstance(activity!!.applicationContext).sendBroadcast(hangupBroadcastIntent)
     }
 }
