@@ -185,6 +185,7 @@ public class JitsiMeetPlugin() : FlutterPlugin, MethodCallHandler,
         val hangUpIntent: Intent = BroadcastIntentHelper.buildHangUpIntent()
         LocalBroadcastManager.getInstance(activity!!.applicationContext)
             .sendBroadcast(hangUpIntent)
+
         closeMeeting(call, result);
         result.success("Successfully hung up.")
     }
