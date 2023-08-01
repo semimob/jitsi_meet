@@ -213,51 +213,6 @@ class _MeetingState extends State<Meeting> {
     final String? serverUrl =
     serverText.text.trim().isEmpty ? null : serverText.text;
 
-    final featureFlags = {
-      /*FeatureFlagEnum.ADD_PEOPLE_ENABLED: false,
-      FeatureFlagEnum.ANDROID_SCREENSHARING_ENABLED: false,
-      FeatureFlagEnum.AUDIO_FOCUS_DISABLED: false,
-      FeatureFlagEnum.AUDIO_MUTE_BUTTON_ENABLED: true,
-      FeatureFlagEnum.AUDIO_ONLY_BUTTON_ENABLED: false,
-      FeatureFlagEnum.CALENDAR_ENABLED: false,
-      FeatureFlagEnum.CAR_MODE_ENABLED: false,
-      FeatureFlagEnum.CLOSE_CAPTIONS_ENABLED: false,
-      FeatureFlagEnum.CONFERENCE_TIMER_ENABLED: false,
-      FeatureFlagEnum.CHAT_ENABLED: false,
-      FeatureFlagEnum.FILMSTRIP_ENABLED: false,
-      FeatureFlagEnum.FULLSCREEN_ENABLED: true,
-      FeatureFlagEnum.HELP_BUTTON_ENABLED: false,
-      FeatureFlagEnum.INVITE_ENABLED: false,
-      FeatureFlagEnum.IOS_RECORDING_ENABLED: false,
-      FeatureFlagEnum.IOS_SCREENSHARING_ENABLED: false,
-      FeatureFlagEnum.SPEAKERSTATS_ENABLED: false,
-      FeatureFlagEnum.KICK_OUT_ENABLED: false,
-      FeatureFlagEnum.LIVE_STREAMING_ENABLED: false,
-      FeatureFlagEnum.LOBBY_MODE_ENABLED: false,
-      FeatureFlagEnum.MEETING_NAME_ENABLED: false,
-      FeatureFlagEnum.MEETING_PASSWORD_ENABLED: false,
-      FeatureFlagEnum.NOTIFICATIONS_ENABLED: false,
-      FeatureFlagEnum.OVERFLOW_MENU_ENABLED: true,
-      FeatureFlagEnum.PIP_ENABLED: false,
-      FeatureFlagEnum.PREJOIN_PAGE_ENABLED: false,
-      FeatureFlagEnum.RAISE_HAND_ENABLED: false,
-      FeatureFlagEnum.REACTIONS_ENABLED: false,
-      FeatureFlagEnum.RECORDING_ENABLED: false,
-      FeatureFlagEnum.REPLACE_PARTICIPANT: false,*/
-      FeatureFlagEnum.RESOLUTION: FeatureFlagVideoResolution.MD_RESOLUTION,
-      /*FeatureFlagEnum.SECURITY_OPTIONS_ENABLED: false,
-      FeatureFlagEnum.SERVER_URL_CHANGE_ENABLED: false,
-      FeatureFlagEnum.SETTINGS_ENABLED: false,
-      FeatureFlagEnum.TILE_VIEW_ENABLED: true,
-      FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE: false,
-      FeatureFlagEnum.TOOLBOX_ENABLED: true,
-      FeatureFlagEnum.VIDEO_MUTE_BUTTON_ENABLED: true,
-      FeatureFlagEnum.VIDEO_SHARE_BUTTON_ENABLED: false,*/
-      FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
-    };
-    if (!kIsWeb && Platform.isAndroid) {
-      featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
-    }
     // Define meetings options here
     final options = JitsiMeetingOptions(
         room: roomText.text,
@@ -269,33 +224,10 @@ class _MeetingState extends State<Meeting> {
         audioOnly: isAudioOnly,
         audioMuted: isAudioMuted,
         videoMuted: isVideoMuted,
-        featureFlags: featureFlags,
-        webOptions: {
-          "roomName": roomText.text,
-          "width": "100%",
-          "height": "100%",
-          "enableWelcomePage": false,
-          "enableNoAudioDetection": true,
-          "enableNoisyMicDetection": true,
-          "enableClosePage": false,
-          "prejoinPageEnabled": false,
-          "hideConferenceTimer": true,
-          "disableInviteFunctions": true,
-          "chromeExtensionBanner": null,
-          "configOverwrite": {
-            "prejoinPageEnabled": false,
-            "disableDeepLinking": true,
-            "enableLobbyChat": false,
-            "enableClosePage": false,
-            "chromeExtensionBanner": null,
-            /*"toolbarButtons": [
-              "microphone",
-              "camera",
-              "hangup",
-            ]*/
-          },
-          "userInfo": {"email": emailText.text, "displayName": nameText.text}
-        });
+        featureFlags: _getFeatureFlags(),
+        webOptions: _getJitsiMeetWebOption(),
+        //configOverrides: _getConfigOverrides()
+    );
 
     await JitsiMeet.joinMeeting(
       options,
@@ -349,5 +281,77 @@ class _MeetingState extends State<Meeting> {
                 }),
           ]),
     );
+  }
+  Map<String, dynamic> _getJitsiMeetWebOption(){
+    return {
+      "roomName": roomText.text,
+      "width": "100%",
+      "height": "100%",
+      "enableNoAudioDetection": true,
+      "enableNoisyMicDetection": true,
+      "enableWelcomePage": false,
+      "chromeExtensionBanner": null,
+      "enableClosePage": false,
+      'prejoinPageEnabled': false,
+      'disableReactions': true,
+      'hideAddRoomButton': true,
+      'hideDisplayName': true,
+      'hideParticipantsStats': true,
+      'disableInviteFunctions': true,
+      "configOverwrite": {
+        'doNotFlipLocalVideo': true,
+        "prejoinPageEnabled": false,
+        "disableDeepLinking": true,
+        "enableLobbyChat": false,
+        "enableClosePage": false,
+        "chromeExtensionBanner": null,
+        'hideDisplayName': true,
+        'hideConferenceTimer': true,
+        'hideParticipantsStats': true,
+        'hideLobbyButton': true,
+        "toolbarConfig": {"alwaysVisible": true},
+        "toolbarButtons": [ "microphone","camera", "hangup", 'tileview', 'fullscreen', 'toggle-camera',
+          'participants-pane', 'highlight', 'desktop','filmstrip', 'dock-iframe', 'etherpad', 'recording', 'select-background'],
+
+      },
+      "userInfo": {"email": emailText.text, "displayName": nameText.text}
+    };
+  }
+  Map<String, Object> _getConfigOverrides(){
+    return {
+      "prejoinPageEnabled": false,
+      "enableClosePage": true,
+      "disableInviteFunctions": true,
+      "toolbarConfig": {"alwaysVisible": true},
+      "toolbarButtons": [ "microphone","camera", "hangup", 'tileview', 'fullscreen', 'toggle-camera'],
+      "disableSelfViewSettings": true,
+      "disableProfile": true,
+      "hiddenDomain": true,
+    };
+  }
+  Map<FeatureFlagEnum, bool> _getFeatureFlags(){
+    Map<FeatureFlagEnum, bool> featureFlags = {
+      FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
+      FeatureFlagEnum.CALENDAR_ENABLED: false,
+      FeatureFlagEnum.LIVE_STREAMING_ENABLED: false,
+      FeatureFlagEnum.INVITE_ENABLED : false,
+      FeatureFlagEnum.ADD_PEOPLE_ENABLED: false,
+      FeatureFlagEnum.FULLSCREEN_ENABLED: true,
+      FeatureFlagEnum.PREJOIN_PAGE_ENABLED: false,
+      FeatureFlagEnum.ANDROID_SCREENSHARING_ENABLED: true,
+      FeatureFlagEnum.IOS_SCREENSHARING_ENABLED: true,
+      FeatureFlagEnum.CONFERENCE_TIMER_ENABLED: false,
+      FeatureFlagEnum.OVERFLOW_MENU_ENABLED: true,
+      FeatureFlagEnum.CAR_MODE_ENABLED: false,
+      FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE: true,
+      FeatureFlagEnum.CHAT_ENABLED: false,
+      FeatureFlagEnum.TILE_VIEW_ENABLED: false,
+      FeatureFlagEnum.VIDEO_SHARE_BUTTON_ENABLED: false,
+      FeatureFlagEnum.SETTINGS_ENABLED: false,
+    };
+    if (!kIsWeb && Platform.isAndroid) {
+      featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
+    }
+    return featureFlags;
   }
 }
