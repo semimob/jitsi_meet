@@ -19,11 +19,12 @@ class Meeting extends StatefulWidget {
 }
 
 class _MeetingState extends State<Meeting> {
-  final serverText = TextEditingController();
-  final roomText = TextEditingController(text: "room_sample_1234");
+  final serverText = TextEditingController(text: "https://jitsi-dev.semilimes.net/");
+  final roomText = TextEditingController(text: "17a41e68-f854-4e53-a2f2-6c49a0f3da35");
   final subjectText = TextEditingController(text: "Subject1");
   final nameText = TextEditingController(text: "User1");
   final emailText = TextEditingController(text: "fake1@email.com");
+  final tokenText = TextEditingController(text: "");
   final iosAppBarRGBAColor =
   TextEditingController(text: "#0080FF80"); //transparent blue
   bool? isAudioOnly = true;
@@ -88,6 +89,15 @@ class _MeetingState extends State<Meeting> {
                 border: OutlineInputBorder(),
                 labelText: "Server URL",
                 hintText: "Hint: Leave empty for meet.jitsi.si"),
+          ),
+          SizedBox(
+            height: 14.0,
+          ),
+          TextField(
+            controller: tokenText,
+            decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: "Token"),
           ),
           SizedBox(
             height: 14.0,
@@ -210,13 +220,12 @@ class _MeetingState extends State<Meeting> {
   }
 
   _joinMeeting() async {
-    final String? serverUrl =
-    serverText.text.trim().isEmpty ? null : serverText.text;
 
     // Define meetings options here
     final options = JitsiMeetingOptions(
-        room: roomText.text,
-        serverURL: serverUrl,
+        room: roomText.text.trim(),
+        token: tokenText.text.trim(),
+        serverURL: serverText.text.trim().isEmpty ? null : serverText.text,
         subject: subjectText.text,
         userDisplayName: nameText.text,
         userEmail: emailText.text,
@@ -284,7 +293,8 @@ class _MeetingState extends State<Meeting> {
   }
   Map<String, dynamic> _getJitsiMeetWebOption(){
     return {
-      "roomName": roomText.text,
+      "roomName": roomText.text.trim(),
+      "token": tokenText.text.trim(),
       "width": "100%",
       "height": "100%",
       "enableNoAudioDetection": true,
@@ -338,14 +348,14 @@ class _MeetingState extends State<Meeting> {
       FeatureFlagEnum.ADD_PEOPLE_ENABLED: false,
       FeatureFlagEnum.FULLSCREEN_ENABLED: true,
       FeatureFlagEnum.PREJOIN_PAGE_ENABLED: false,
-      FeatureFlagEnum.ANDROID_SCREENSHARING_ENABLED: true,
-      FeatureFlagEnum.IOS_SCREENSHARING_ENABLED: true,
+      FeatureFlagEnum.ANDROID_SCREENSHARING_ENABLED: false,
+      FeatureFlagEnum.IOS_SCREENSHARING_ENABLED: false,
       FeatureFlagEnum.CONFERENCE_TIMER_ENABLED: false,
       FeatureFlagEnum.OVERFLOW_MENU_ENABLED: true,
       FeatureFlagEnum.CAR_MODE_ENABLED: false,
       FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE: true,
       FeatureFlagEnum.CHAT_ENABLED: false,
-      FeatureFlagEnum.TILE_VIEW_ENABLED: false,
+      FeatureFlagEnum.TILE_VIEW_ENABLED: true,
       FeatureFlagEnum.VIDEO_SHARE_BUTTON_ENABLED: false,
       FeatureFlagEnum.SETTINGS_ENABLED: false,
     };

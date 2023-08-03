@@ -238,10 +238,19 @@ class JitsiMeetPlugin extends JitsiMeetPlatform {
     api?.executeCommand(command, args);
   }
 
+  @override
   closeMeeting() {
     debugPrint("Closing the meeting");
     api?.dispose();
     api = null;
+  }
+  
+  @override
+  Future<JitsiMeetingResponse> hangUp() async {
+    debugPrint("hangUp.Closing the meeting");
+    api?.dispose();
+    api = null;
+    return JitsiMeetingResponse(isSuccess: true, message: "hangUp Close the meeting");
   }
 
   /// Adds a JitsiMeetingListener that will broadcast conference events
