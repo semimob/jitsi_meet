@@ -182,7 +182,7 @@ public class JitsiMeetPlugin() : FlutterPlugin, MethodCallHandler,
     }
 
     private fun setVideoMuted(call: MethodCall, result: Result) {
-        val muted = call.argument<Boolean>("muted") ?: false
+        val muted = call.argument<Boolean>("isMuted") ?: false
         val videoMuteBroadcastIntent: Intent = BroadcastIntentHelper.buildSetVideoMutedIntent(muted)
         LocalBroadcastManager.getInstance(activity!!.applicationContext).sendBroadcast(videoMuteBroadcastIntent)
         result.success("Successfully set video $muted")

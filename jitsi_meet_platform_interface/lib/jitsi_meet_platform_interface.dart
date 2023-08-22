@@ -45,6 +45,11 @@ abstract class JitsiMeetPlatform extends PlatformInterface {
         'jitsi_meet: setAudioMuted has not been implemented.');
   }
 
+  Future<JitsiMeetingResponse> setVideoMuted(bool isMuted) async {
+    throw UnimplementedError(
+        'jitsi_meet: setVideoMuted has not been implemented.');
+  }
+
   Future<JitsiMeetingResponse> hangUp() async {
     throw UnimplementedError('jitsi_meet: hangUp has not been implemented.');
   }

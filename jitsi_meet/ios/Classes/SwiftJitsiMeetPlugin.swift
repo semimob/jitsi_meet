@@ -119,7 +119,7 @@ public class SwiftJitsiMeetPlugin: NSObject, FlutterPlugin, FlutterStreamHandler
 
     private func setVideoMuted(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let arguments = call.arguments as! [String: Any]
-        let muted = arguments["muted"] as! Bool
+        let muted = arguments["isMuted"] as! Bool
         jitsiMeetViewController?.jitsiMeetView?.setVideoMuted(muted)
         result("Successfully set video \(muted)")
     }

@@ -73,6 +73,24 @@ class MethodChannelJitsiMeet extends JitsiMeetPlatform {
   }
 
   @override
+  Future<JitsiMeetingResponse> setVideoMuted(bool isMuted) async {
+    Map<String, dynamic> _options = {
+      'isMuted': isMuted,
+    };
+    return await _methodChannel
+        .invokeMethod<String>('setVideoMuted', _options)
+        .then((message) {
+      return JitsiMeetingResponse(isSuccess: true, message: message);
+    }).catchError((error) {
+      return JitsiMeetingResponse(
+        isSuccess: false,
+        message: error.toString(),
+        error: error,
+      );
+    });
+  }
+
+  @override
   Future<JitsiMeetingResponse> hangUp() async {
     return await _methodChannel.invokeMethod<String>('hangUp').then((message) {
       return JitsiMeetingResponse(isSuccess: true, message: message);
