@@ -36,7 +36,10 @@ public class SwiftJitsiMeetPlugin: NSObject, FlutterPlugin, FlutterStreamHandler
         } else if (call.method == "closeMeeting") {
             closeMeeting(call, result: result)
             return
-        }
+        } else if (call.method == "setVideoMuted") {
+             setVideoMuted(call, result: result)
+             return
+         }
     }
 
     private func joinMeeting(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -114,16 +117,16 @@ public class SwiftJitsiMeetPlugin: NSObject, FlutterPlugin, FlutterStreamHandler
         result(nil)
     }
 
+    private func setVideoMuted(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let arguments = call.arguments as! [String: Any]
+        let muted = arguments["muted"] as! Bool
+        jitsiMeetViewController?.jitsiMeetView?.setVideoMuted(muted)
+        result("Successfully set video \(muted)")
+    }
+
     private func closeMeeting(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        /* var dictClosingServerInfo : Dictionary = Dictionary<AnyHashable,Any>()
-        let serverURL : String = self.jitsiViewController?.serverURL?.absoluteString ?? ""
-        let roomName : String = self.jitsiViewController?.room ?? ""
-
-        dictClosingServerInfo["url"] = "\(serverURL)/\(roomName)";
-
-        self.jitsiViewController?.closeJitsiMeeting();
-        self.jitsiViewController?.conferenceTerminated(dictClosingServerInfo);*/
-        result(nil)
+         self.jitsiViewController?.sourceJitsiMeetView?.hangUp()
+         result(nil)
     }
 
     private func hangUp(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
