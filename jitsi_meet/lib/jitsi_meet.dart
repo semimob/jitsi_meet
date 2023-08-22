@@ -65,6 +65,14 @@ class JitsiMeet {
 
   static hangUp() => JitsiMeetPlatform.instance.hangUp();
 
+  static Future<JitsiMeetingResponse> setAudioMuted(bool muted) async{
+    return await JitsiMeetPlatform.instance.setAudioMuted(muted);
+  }
+
+  static Future<JitsiMeetingResponse> setVideoMuted(bool muted) async{
+    return await JitsiMeetPlatform.instance.setVideoMuted(muted);
+  }
+
   /// allow execute a command over a Jitsi live session (only for web)
   static executeCommand(String command, List<String> args) {
     JitsiMeetPlatform.instance.executeCommand(command, args);
