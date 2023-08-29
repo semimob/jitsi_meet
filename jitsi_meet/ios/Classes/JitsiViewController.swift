@@ -2,7 +2,7 @@ import UIKit
 import JitsiMeetSDK
 
 class JitsiMeetWrapperViewController: UIViewController {
-    fileprivate var pipViewCoordinator: CustomPiPViewCoordinator?
+    fileprivate var pipViewCoordinator: PiPViewCoordinator?
     fileprivate var jitsiMeetView: UIView?
     var sourceJitsiMeetView: JitsiMeetView?
 
@@ -54,7 +54,7 @@ class JitsiMeetWrapperViewController: UIViewController {
         // Enable jitsimeet view to be a view that can be displayed
         // on top of all the things, and let the coordinator to manage
         // the view state and interactions
-        pipViewCoordinator = CustomPiPViewCoordinator(withView: jitsiMeetView)
+        pipViewCoordinator = PiPViewCoordinator(withView: jitsiMeetView)
         pipViewCoordinator?.configureAsStickyView(withParentView: view)
 
         // animate in
@@ -72,6 +72,7 @@ class JitsiMeetWrapperViewController: UIViewController {
 
     fileprivate func cleanUp() {
         jitsiMeetView?.removeFromSuperview()
+        sourceJitsiMeetView?.removeFromSuperview()
         jitsiMeetView = nil
         pipViewCoordinator = nil
         sourceJitsiMeetView = nil

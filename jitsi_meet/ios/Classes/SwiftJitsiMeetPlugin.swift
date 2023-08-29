@@ -63,7 +63,7 @@ public class SwiftJitsiMeetPlugin: NSObject, FlutterPlugin, FlutterStreamHandler
             }
 
             if let subject = arguments["subject"] as? String {
-                builder.setSubject(subject)
+                builder.setSubject(subject);
             }
 
             if let token = arguments["token"] as? String {
@@ -114,14 +114,14 @@ public class SwiftJitsiMeetPlugin: NSObject, FlutterPlugin, FlutterStreamHandler
         let arguments = call.arguments as! [String: Any]
         let isMuted = arguments["isMuted"] as? Bool ?? false
         self.jitsiViewController?.sourceJitsiMeetView?.setAudioMuted(isMuted)
-        result(nil)
+       result("Successfully set audio \(isMuted)")
     }
 
     private func setVideoMuted(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let arguments = call.arguments as! [String: Any]
         let isMuted = arguments["isMuted"] as? Bool ?? false
         self.jitsiViewController?.sourceJitsiMeetView?.setVideoMuted(isMuted)
-        result(nil)
+        result("Successfully set video \(isMuted)")
     }
 
     private func closeMeeting(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -130,7 +130,7 @@ public class SwiftJitsiMeetPlugin: NSObject, FlutterPlugin, FlutterStreamHandler
     }
 
     private func hangUp(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        self.jitsiViewController?.sourceJitsiMeetView?.hangUp()
+        self.jitsiViewController?.sourceJitsiMeetView?.leave()
         result(nil)
     }
 

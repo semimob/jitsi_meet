@@ -98,11 +98,11 @@ class JitsiMeetPluginActivity : JitsiMeetActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         LocalBroadcastManager.getInstance(this)
             .unregisterReceiver(this.broadcastReceiver)
         eventStreamHandler.onClosed()
         turnScreenOffAndKeyguardOn();
+        super.onDestroy()
     }
 
     private fun turnScreenOnAndKeyguardOff() {
